@@ -1,4 +1,5 @@
-/*global $,ical_event_source,moment,setInterval,setTimeout */
+/*global $,ical_event_source,localforage,moment,setInterval,setTimeout */
+var calendars = [];
 $(document).ready(function() {
   $('#calendar').fullCalendar({
     header: {
@@ -18,8 +19,19 @@ $(document).ready(function() {
       }
     }
   });
-  // for each ICAL
-  // addICALSource(url)
+  localforage.getItem('calendars')
+    .then((data) => {
+      if (data != null) {
+        console.log('Found %d saved calendars', data.length);
+        calendars = data;
+        for (let calendar of data) {
+          if (calendar.type == 'ical') {
+            addICALSource(calendar.url);
+          }
+        }
+      }
+    });
+
   // Refresh calendar sources every 5 minutes.
   setInterval(() => $('#calendar').fullCalendar('refetchEvents'), 5 * 60 * 1000);
   // Ensure that the current day is showing.
@@ -35,7 +47,17 @@ function check_current_day() {
   setTimeout(check_current_day, tomorrow.diff(now));
 }
 
-//TODO: add a way to add ICAL sources that is saved in IDB or something
+function add_calendar(type, url) {
+  if (type != 'ical') {
+    console.error('Only ical calendars are supported currently');
+    return;
+  }
+
+  addICALSource(url);
+  calendars.push({type: type, url: url});
+  localforage.setItem('calendars', calendars);
+}
+
 
 function addICALSource(url) {
   $('#calendar').fullCalendar('addEventSource', ical_event_source(url));
