@@ -1,4 +1,4 @@
-/*global ICAL,$ */
+/*global ICAL,$,moment */
 // Return a Promise that resolves to jCal data of the ICAL file at `url`.
 function get_ical_data(url) {
   return new Promise((resolve, reject) => {
@@ -31,7 +31,7 @@ function ical_event_source(url) {
         callback(
           events
           //TODO: handle recurring events
-            .filter(entry => !entry.isRecurring() && ($.fullCalendar.moment(entry.startDate.toJSDate()).isBetween(start, end, null, '[]') || $.fullCalendar.moment(entry.endDate.toJSDate()).isBetween(start, end, null, '[]')))
+            .filter(entry => !entry.isRecurring() && (moment(entry.startDate.toJSDate()).isBetween(start, end, null, '[]') || moment(entry.endDate.toJSDate()).isBetween(start, end, null, '[]')))
             .map(entry => {
               return {
                 id: entry.uid,
