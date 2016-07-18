@@ -1,4 +1,4 @@
-/*global $,ical_event_source */
+/*global $,ical_event_source,setInterval */
 $(document).ready(function() {
   $('#calendar').fullCalendar({
     header: {
@@ -20,14 +20,13 @@ $(document).ready(function() {
   });
   // for each ICAL
   // addICALSource(url)
+  // Refresh calendar sources every 5 minutes.
+  setInterval(() => $('#calendar').fullCalendar('refetchEvents'), 5 * 60 * 1000);
 });
 
 //TODO: add a way to add ICAL sources that is saved in IDB or something
 //TODO: periodically poll to set the current date
 // $('#calendar').fullCalendar('today');
-//TODO: periodically refresh calendar sources
-// $('#calendar').fullCalendar('refetchEvents')
-
 
 function addICALSource(url) {
   $('#calendar').fullCalendar('addEventSource', ical_event_source(url));
