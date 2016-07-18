@@ -1,4 +1,7 @@
 /*global ICAL,$,moment */
+// Any copyright is dedicated to the Public Domain.
+// http://creativecommons.org/publicdomain/zero/1.0/
+
 // Return a Promise that resolves to jCal data of the ICAL file at `url`.
 function get_ical_data(url) {
   return new Promise((resolve, reject) => {

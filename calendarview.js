@@ -1,4 +1,6 @@
 /*global $,ical_event_source,localforage,moment,setInterval,setTimeout */
+// Any copyright is dedicated to the Public Domain.
+// http://creativecommons.org/publicdomain/zero/1.0/
 var calendars = [];
 $(document).ready(function() {
   $('#calendar').fullCalendar({
