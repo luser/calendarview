@@ -1,6 +1,9 @@
-/*global $,ical_event_source,localforage,moment,setInterval,setTimeout */
+/*global $,google_auth,google_event_source,ical_event_source,localforage,moment,setInterval,setTimeout */
 // Any copyright is dedicated to the Public Domain.
 // http://creativecommons.org/publicdomain/zero/1.0/
+
+var CLIENT_ID = '828124712330-lak7vgv6kak9cij45o1sjcppk9us0ahv.apps.googleusercontent.com';
+
 var calendars = [];
 $(document).ready(function() {
   $('#calendar').fullCalendar({
@@ -26,10 +29,16 @@ $(document).ready(function() {
       if (data != null) {
         console.log('Found %d saved calendars', data.length);
         calendars = data;
+        var google_calendars = [];
         for (let calendar of data) {
           if (calendar.type == 'ical') {
-            addICALSource(calendar.url);
+            add_ical_source(calendar.url);
+          } else if (calendar.type == 'google') {
+            google_calendars.push(calendar.id);
           }
+        }
+        if (google_calendars) {
+          google_auth(CLIENT_ID).then(() => google_calendars.forEach(id => add_google_source(id)));
         }
       }
     });
@@ -49,18 +58,26 @@ function check_current_day() {
   setTimeout(check_current_day, tomorrow.diff(now));
 }
 
-function add_calendar(type, url) {
-  if (type != 'ical') {
-    console.error('Only ical calendars are supported currently');
-    return;
+function add_calendar(type, which) {
+  if (type == 'ical') {
+    add_ical_source(which);
+    calendars.push({type: type, url: which});
+    localforage.setItem('calendars', calendars);
+  } else if (type == 'google') {
+    google_auth(CLIENT_ID).then(() => {
+      add_google_source(which);
+      calendars.push({type: type, id: which});
+      localforage.setItem('calendars', calendars);
+    });
+  } else {
+    console.error('Only ical and Google calendars are supported currently');
   }
-
-  addICALSource(url);
-  calendars.push({type: type, url: url});
-  localforage.setItem('calendars', calendars);
 }
 
-
-function addICALSource(url) {
+function add_ical_source(url) {
   $('#calendar').fullCalendar('addEventSource', ical_event_source(url));
+}
+
+function add_google_source(url) {
+  $('#calendar').fullCalendar('addEventSource', google_event_source(url));
 }

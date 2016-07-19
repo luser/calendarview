@@ -30,7 +30,7 @@ function ical_event_source(url) {
         var comp = new ICAL.Component(data);
         var events = comp.getAllSubcomponents('vevent').map(ve => new ICAL.Event(ve));
         var color = comp.getFirstPropertyValue('x-apple-calendar-color');
-        console.log('Got %d calendar events', events.length);
+        console.log('ical: Got %d events', events.length);
         callback(
           events
           //TODO: handle recurring events
@@ -42,7 +42,6 @@ function ical_event_source(url) {
                 allDay: entry.startDate.isDate,
                 start: entry.startDate.toJSDate(),
                 end: entry.endDate.toJSDate(),
-                url: url,
                 color: color,
                 location: entry.location,
                 description: entry.description

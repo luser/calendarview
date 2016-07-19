@@ -13,12 +13,20 @@
     <script src="lib/fullcalendar.min.js"></script>
     <script src="lib/ical.min.js"></script>
     <script src="lib/localforage.min.js"></script>
+    <script src="https://apis.google.com/js/api.js"></script>
     <!-- This sucks but I really like arrow functions -->
     <script src="lib/babel.min.js"></script>
     <script src="icalsource.js" type="text/babel"></script>
+    <script src="gcal.js" type="text/babel"></script>
     <script src="calendarview.js" type="text/babel"></script>
   </head>
   <body>
+    <div id="authorize-div" style="display: none">
+      <span>Authorize access to Google Calendar API</span>
+      <button id="authorize-button">
+        Authorize
+      </button>
+    </div>
     <div id="calendar"></div>
   </body>
 </html>
