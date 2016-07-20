@@ -2,6 +2,13 @@
 // Any copyright is dedicated to the Public Domain.
 // http://creativecommons.org/publicdomain/zero/1.0/
 
+var debug = window.location.search.indexOf('debug') != -1;
+function log(...args) {
+  if (debug) {
+    console.log(...args);
+  }
+}
+
 // Attempt to authenticate to Google, asking the user to grant read-only
 // calendar access. Returns a Promise that is fulfilled after successfully
 // authenticating and loading the calendar API library.
@@ -9,6 +16,7 @@ function google_auth(client_id) {
   return new Promise((resolve, reject) => {
     var scopes = 'https://www.googleapis.com/auth/calendar.readonly';
     function handle_auth_result(auth_result) {
+      log('handle_auth_result(%s)', auth_result);
       var authorize_div = document.getElementById('authorize-div');
       // TODO: handle errors
       if (auth_result && !auth_result.error) {
@@ -30,13 +38,15 @@ function google_auth(client_id) {
     }
     gapi.load('client',
               () => {
+                log('loaded client');
                 gapi.auth.authorize(
                   {
                     'client_id': client_id,
                     'scope': scopes,
                     'immediate': true
                   })
-                  .then(handle_auth_result, reject);
+                  .then(handle_auth_result,
+                        (e) => { console.error('authorize failed: %s', e); reject(e); });
               });
   });
 }
