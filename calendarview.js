@@ -12,17 +12,8 @@ $(document).ready(function() {
       center: 'title',
       right: ''
     },
-    // I don't like how the week agenda shows days that
-    // are already past.
-    defaultView: 'agendaSixDay',
-    timezone: 'local',
-    views: {
-      agendaSixDay: {
-        type: 'agenda',
-        duration: { days: 6 },
-        buttonText: '6 day'
-      }
-    }
+    defaultView: 'schedule',
+    timezone: 'local'
   });
   localforage.getItem('calendars')
     .then((data) => {
@@ -81,3 +72,46 @@ function add_ical_source(url) {
 function add_google_source(url) {
   $('#calendar').fullCalendar('addEventSource', google_event_source(url));
 }
+
+// Create a subclass of AgendaView.
+var FC = $.fullCalendar;
+var ScheduleView = FC.AgendaView.extend({
+  // Always display just `intervalDuration` days from `date`.
+  computeRange: function(date) {
+    var start = date.clone();
+    var end = start.clone().add(this.intervalDuration);
+    console.log('computeRange: %s - %s', start.toString(), end.toString());
+    return {
+      // Always work in days.
+      intervalUnit: 'days',
+      intervalStart: start,
+      intervalEnd: end,
+      start: start,
+      end: end
+    };
+  },
+  //XXX: this is a hack to work around the fact that fullcalendar won't
+  // re-render the view when the date changes if the new date is within
+  // the existing interval.
+  massageCurrentDate: function(date, direction) {
+    if (date.isWithin(this.intervalStart, this.intervalEnd)) {
+      this.intervalStart = date.clone().add(1, 'day');
+      this.intervalEnd = this.intervalStart.clone().add(this.intervalDuration);
+    }
+    return date;
+  }
+});
+
+FC.views.schedule = {
+  'class': ScheduleView,
+  'duration': {'days': 6},
+  // Cribbed from the agenda defaults.
+  defaults: {
+    allDaySlot: true,
+    allDayText: 'all-day',
+    slotDuration: '00:30:00',
+    minTime: '00:00:00',
+    maxTime: '24:00:00',
+    slotEventOverlap: true
+  }
+};
