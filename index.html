@@ -15,11 +15,30 @@
     <script src="lib/ical.min.js"></script>
     <script src="lib/localforage.min.js"></script>
     <script src="https://apis.google.com/js/api.js"></script>
-    <!-- This sucks but I really like arrow functions -->
     <script src="lib/babel.min.js"></script>
-    <script src="icalsource.js" type="text/babel"></script>
-    <script src="gcal.js" type="text/babel"></script>
-    <script src="calendarview.js" type="text/babel"></script>
+    <!-- This sucks but I really like arrow functions -->
+    <script>
+      // Test for arrow function support.
+      var scripts = ['icalsource.js', 'gcal.js', 'calendarview.js'];
+      var arrow_support;
+      try {
+        new Function('() => true');
+        arrow_support = true;
+      } catch(e) {
+        arrow_support = false;
+      }
+      function add_script(script, type) {
+        var s = document.createElement('script');
+        s.src = script;
+        if (type) {
+          s.type = type;
+        }
+        document.head.appendChild(s);
+      }
+      for (var i = 0; i < scripts.length; i++) {
+        add_script(scripts[i], arrow_support ? '' : 'text/babel');
+      }
+    </script>
   </head>
   <body>
     <div id="authorize-div" style="display: none">
