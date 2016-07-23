@@ -11,12 +11,12 @@ function get_ical_data(url) {
         if (req.status == 200) {
           resolve(ICAL.parse(req.responseText));
         } else {
-          reject("Error, HTTP " + req.status.toString());
+          reject('Error, HTTP ' + req.status.toString());
         }
       }
     };
     req.onerror = e => reject(e);
-    req.open("GET", url, true);
+    req.open('GET', url, true);
     req.send(null);
   });
 }
