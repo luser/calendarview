@@ -3,6 +3,7 @@
 // http://creativecommons.org/publicdomain/zero/1.0/
 
 var CLIENT_ID = '828124712330-lak7vgv6kak9cij45o1sjcppk9us0ahv.apps.googleusercontent.com';
+var last_app_sha = null;
 
 var calendars = [];
 $(document).ready(function() {
@@ -38,7 +39,42 @@ $(document).ready(function() {
   setInterval(() => $('#calendar').fullCalendar('refetchEvents'), 5 * 60 * 1000);
   // Ensure that the current time is showing every half hour.
   setInterval(() => $('#calendar').fullCalendar('gotoDate', moment()), 30 * 60 * 1000);
+
+  // If not running from localhost, check if the webapp has been updated
+  // every half hour.
+  if (window.location.hostname != 'localhost') {
+    check_webapp_update();
+  }
 });
+
+function check_webapp_update() {
+  var req = new XMLHttpRequest();
+  req.onreadystatechange = (ev) => {
+      if (req.readyState == 4) {
+        if (req.status == 200) {
+          var current_sha = get_branch_commit(req.response);
+          if (last_app_sha && last_app_sha != current_sha) {
+            window.location.reload();
+          } else {
+            last_app_sha = current_sha;
+            setTimeout(check_webapp_update, 30 * 60 * 1000);
+          }
+        }
+      }
+  };
+  req.open('GET', 'https://api.github.com/repos/luser/calendarview/branches', true);
+  req.responseType = 'json';
+  req.send(null);
+}
+
+function get_branch_commit(branches) {
+  for (var branch of branches) {
+    if (branch.name == 'gh-pages') {
+      return branch.commit.sha;
+    }
+  }
+  return null;
+}
 
 function add_calendar(type, which) {
   if (type == 'ical') {
