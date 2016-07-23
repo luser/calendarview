@@ -36,18 +36,9 @@ $(document).ready(function() {
 
   // Refresh calendar sources every 5 minutes.
   setInterval(() => $('#calendar').fullCalendar('refetchEvents'), 5 * 60 * 1000);
-  // Ensure that the current day is showing.
-  check_current_day();
+  // Ensure that the current time is showing every half hour.
+  setInterval(() => $('#calendar').fullCalendar('gotoDate', moment()), 30 * 60 * 1000);
 });
-
-function check_current_day() {
-  // Set the calendar to show the current day.
-  $('#calendar').fullCalendar('today');
-  // Check again when the day rolls over to tomorrow.
-  var tomorrow = moment().add(1, 'day').startOf('day');
-  var now = moment();
-  setTimeout(check_current_day, tomorrow.diff(now));
-}
 
 function add_calendar(type, which) {
   if (type == 'ical') {
