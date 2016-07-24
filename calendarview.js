@@ -13,9 +13,11 @@ $(document).ready(function() {
       center: 'title',
       right: ''
     },
+    height: window.innerHeight,
     defaultView: 'schedule',
     timezone: 'local'
   });
+  window.onresize = () => $('#calendar').fullCalendar('option', 'height', window.innerHeight);
   localforage.getItem('calendars')
     .then((data) => {
       if (data != null) {
@@ -111,8 +113,8 @@ var ScheduleView = FC.AgendaView.extend({
     return {
       // Always work in days.
       intervalUnit: 'days',
-      intervalStart: start,
-      intervalEnd: end,
+      intervalStart: start.clone(),
+      intervalEnd: end.clone(),
       start: start,
       end: end
     };
