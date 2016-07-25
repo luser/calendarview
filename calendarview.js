@@ -109,6 +109,8 @@ var ScheduleView = FC.AgendaView.extend({
   computeRange: function(date) {
     var start = date.clone();
     var end = start.clone().add(this.intervalDuration);
+    start.stripTime();
+    end.stripTime();
     console.log('computeRange: %s - %s', start.toString(), end.toString());
     return {
       // Always work in days.
