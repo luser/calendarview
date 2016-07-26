@@ -2,3 +2,23 @@ html, body {
     padding: 0px;
     margin: 0px;
 }
+
+.fc-icon-settings {
+    background-image: url(icons/gear-a.svg);
+    background-size: contain;
+    width: 20px;
+    height: 20px;
+}
+
+#settings {
+    display: none;
+    position: absolute;
+    margin: auto;
+    height: 75%;
+    width: 75%;
+    overflow: scroll;
+    top: 0; left: 0; bottom: 0; right: 0;
+    z-index: 1;
+    background-color: white;
+    border: 2px solid black;
+}

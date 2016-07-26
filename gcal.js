@@ -1,13 +1,6 @@
-/*global gapi,moment*/
+/*global gapi,log,moment*/
 // Any copyright is dedicated to the Public Domain.
 // http://creativecommons.org/publicdomain/zero/1.0/
-
-var debug = window.location.search.indexOf('debug') != -1;
-function log(...args) {
-  if (debug) {
-    console.log(...args);
-  }
-}
 
 // Attempt to authenticate to Google, asking the user to grant read-only
 // calendar access. Returns a Promise that is fulfilled after successfully
@@ -16,6 +9,7 @@ function google_auth(client_id) {
   return new Promise((resolve, reject) => {
     var scopes = 'https://www.googleapis.com/auth/calendar.readonly';
     function finish_authorize() {
+      log('finish_authorize');
       gapi.client.load('calendar', 'v3').then(resolve, reject);
     }
     function update_signin_status(status) {
@@ -24,20 +18,28 @@ function google_auth(client_id) {
         finish_authorize();
       }
     }
-    gapi.load('client:auth2', () => {
-      gapi.auth2.init({
-        client_id: client_id,
-        scope: scopes
-      }).then(() => {
-        var auth = gapi.auth2.getAuthInstance();
+    function do_login(auth) {
+      if (auth.isSignedIn.get()) {
+        finish_authorize();
+      } else {
         auth.isSignedIn.listen(update_signin_status);
-        if (auth.isSignedIn.get()) {
-          finish_authorize();
-        } else {
-          gapi.auth2.getAuthInstance().signIn();
-        }
-      });
-
+        auth.signIn();
+      }
+    }
+    gapi.load('client:auth2', () => {
+      log('loaded auth2');
+      var auth = gapi.auth2.getAuthInstance();
+      if (auth == null) {
+        gapi.auth2.init({
+          client_id: client_id,
+          scope: scopes
+        }).then(() => {
+          log('auth2 initialized');
+          do_login(gapi.auth2.getAuthInstance());
+        });
+      } else {
+        do_login(auth);
+      }
     });
   });
 }
@@ -99,7 +101,7 @@ function google_event_source(calendar_id) {
                    gcal_list_events(calendar_id, start, end)])
       .then(([calendar, events]) => {
         var color = calendar.backgroundColor || null;
-        console.log('gcal: Got %d events', events.length);
+        log('gcal: Got %d events', events.length);
         callback(events
                  .map(entry => {
                    return {

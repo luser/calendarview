@@ -1,9 +1,16 @@
-/*global $,google_auth,google_event_source,ical_event_source,localforage,moment,setInterval,setTimeout */
+/*global $,google_auth,google_event_source,gcal_list_calendars,ical_event_source,localforage,moment,setInterval,setTimeout */
 // Any copyright is dedicated to the Public Domain.
 // http://creativecommons.org/publicdomain/zero/1.0/
 
 var CLIENT_ID = '828124712330-lak7vgv6kak9cij45o1sjcppk9us0ahv.apps.googleusercontent.com';
 var last_app_sha = null;
+
+var debug = window.location.search.indexOf('debug') != -1;
+function log(...args) {
+  if (debug) {
+    console.log(...args);
+  }
+}
 
 var calendars = [];
 $(document).ready(function() {
@@ -11,17 +18,26 @@ $(document).ready(function() {
     header: {
       left: '',
       center: 'title',
-      right: ''
+      right: 'settings'
+    },
+    customButtons: {
+      settings: {
+        text: 'Settings',
+        click: show_settings,
+        icon: 'settings'
+      }
     },
     height: window.innerHeight,
     defaultView: 'schedule',
     timezone: 'local'
   });
+  $('#add-google-calendars').on('click', () => google_auth(CLIENT_ID).then(gcal_list_calendars).then(add_gcal_list));
+  $('#add-ical').on('click', () => add_ical_calendar());
   window.onresize = () => $('#calendar').fullCalendar('option', 'height', window.innerHeight);
   localforage.getItem('calendars')
     .then((data) => {
       if (data != null) {
-        console.log('Found %d saved calendars', data.length);
+        log('Found %d saved calendars', data.length);
         calendars = data;
         var google_calendars = [];
         for (let calendar of data) {
@@ -31,7 +47,7 @@ $(document).ready(function() {
             google_calendars.push(calendar.id);
           }
         }
-        if (google_calendars) {
+        if (google_calendars.length) {
           google_auth(CLIENT_ID).then(() => google_calendars.forEach(id => add_google_source(id)));
         }
       }
@@ -78,7 +94,43 @@ function get_branch_commit(branches) {
   return null;
 }
 
+function show_settings() {
+  log('show_settings');
+  $('#settings').toggle();
+}
+
+function add_gcal_list(gcals) {
+  log('add_gcal_list: %d calendars', gcals.length);
+  var existing_gcals = {};
+  for (var cal of calendars) {
+    if (cal.type == 'google') {
+      existing_gcals[cal.id] = true;
+    }
+  }
+  for (cal of gcals) {
+    if (!cal.selected) {
+      continue;
+    }
+    if (existing_gcals[cal.id]) {
+      // Already have this calendar
+      continue;
+    }
+    add_google_source(cal.id);
+    calendars.push({type: 'google', id: cal.id, name: cal.summary});
+  }
+  localforage.setItem('calendars', calendars);
+}
+
+function add_ical_calendar() {
+  log('add_ical_calendar');
+  var url = $('#ical-url').val();
+  if (url) {
+    add_calendar('ical', url);
+  }
+}
+
 function add_calendar(type, which) {
+  log('add_calendar: %s, %s', type, which);
   if (type == 'ical') {
     add_ical_source(which);
     calendars.push({type: type, url: which});
@@ -111,7 +163,7 @@ var ScheduleView = FC.AgendaView.extend({
     var end = start.clone().add(this.intervalDuration);
     start.stripTime();
     end.stripTime();
-    console.log('computeRange: %s - %s', start.toString(), end.toString());
+    log('computeRange: %s - %s', start.toString(), end.toString());
     return {
       // Always work in days.
       intervalUnit: 'days',

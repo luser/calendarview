@@ -1,4 +1,4 @@
-/*global ICAL,$,moment */
+/*global ICAL,$,log,moment */
 // Any copyright is dedicated to the Public Domain.
 // http://creativecommons.org/publicdomain/zero/1.0/
 
@@ -30,7 +30,7 @@ function ical_event_source(url) {
         var comp = new ICAL.Component(data);
         var events = comp.getAllSubcomponents('vevent').map(ve => new ICAL.Event(ve));
         var color = comp.getFirstPropertyValue('x-apple-calendar-color');
-        console.log('ical: Got %d events', events.length);
+        log('ical: Got %d events', events.length);
         callback(
           events
           //TODO: handle recurring events
