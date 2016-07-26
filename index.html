@@ -19,11 +19,11 @@
     <script src="lib/babel.min.js"></script>
     <!-- This sucks but I really like arrow functions -->
     <script>
-      // Test for arrow function+spread operator support.
+      // Test for some ES6 support.
       var scripts = ['icalsource.js', 'gcal.js', 'calendarview.js'];
       var es6_support;
       try {
-        new Function('(...a) => true');
+        new Function('(...a) => { for (x of a) {} }');
         es6_support = true;
       } catch(e) {
         es6_support = false;
