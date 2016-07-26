@@ -42,6 +42,10 @@ function google_auth(client_id) {
   });
 }
 
+function google_logout() {
+  gapi.auth2.getAuthInstance().signOut();
+}
+
 function gcal_list_calendars() {
   function list_calendars_page(page_token=null) {
     var options = {
