@@ -40,7 +40,7 @@ $(document).ready(function() {
         log('Found %d saved calendars', data.length);
         calendars = data;
         var google_calendars = [];
-        for (let calendar of data) {
+        for (var calendar of data) {
           if (calendar.type == 'ical') {
             add_ical_source(calendar.url);
           } else if (calendar.type == 'google') {
