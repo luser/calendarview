@@ -15,39 +15,30 @@ function log(...args) {
 function google_auth(client_id) {
   return new Promise((resolve, reject) => {
     var scopes = 'https://www.googleapis.com/auth/calendar.readonly';
-    function handle_auth_result(auth_result) {
-      log('handle_auth_result(%s)', auth_result);
-      var authorize_div = document.getElementById('authorize-div');
-      // TODO: handle errors
-      if (auth_result && !auth_result.error) {
-        // Hide auth UI, then load calendar API.
-        authorize_div.style.display = 'none';
-        gapi.client.load('calendar', 'v3').then(resolve, reject);
-      } else {
-        // Show auth UI, allowing the user to initiate authorization by
-        // clicking authorize button.
-        var authorizeButton = document.getElementById('authorize-button');
-        authorizeButton.onclick = () => {
-          gapi.auth.authorize(
-            {client_id: client_id, scope: scopes, immediate: false},
-            handle_auth_result);
-          return false;
-        };
-        authorize_div.style.display = 'inline';
+    function finish_authorize() {
+      gapi.client.load('calendar', 'v3').then(resolve, reject);
+    }
+    function update_signin_status(status) {
+      log('update_signin_status: %s', status);
+      if (status) {
+        finish_authorize();
       }
     }
-    gapi.load('client',
-              () => {
-                log('loaded client');
-                gapi.auth.authorize(
-                  {
-                    'client_id': client_id,
-                    'scope': scopes,
-                    'immediate': true
-                  })
-                  .then(handle_auth_result,
-                        (e) => { console.error('authorize failed: %s', e); reject(e); });
-              });
+    gapi.load('client:auth2', () => {
+      gapi.auth2.init({
+        client_id: client_id,
+        scope: scopes
+      }).then(() => {
+        var auth = gapi.auth2.getAuthInstance();
+        auth.isSignedIn.listen(update_signin_status);
+        if (auth.isSignedIn.get()) {
+          finish_authorize();
+        } else {
+          gapi.auth2.getAuthInstance().signIn();
+        }
+      });
+
+    });
   });
 }
 
