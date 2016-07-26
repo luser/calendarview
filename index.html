@@ -19,14 +19,14 @@
     <script src="lib/babel.min.js"></script>
     <!-- This sucks but I really like arrow functions -->
     <script>
-      // Test for arrow function support.
+      // Test for arrow function+spread operator support.
       var scripts = ['icalsource.js', 'gcal.js', 'calendarview.js'];
-      var arrow_support;
+      var es6_support;
       try {
-        new Function('() => true');
-        arrow_support = true;
+        new Function('(...a) => true');
+        es6_support = true;
       } catch(e) {
-        arrow_support = false;
+        es6_support = false;
       }
       function add_script(script, type) {
         var s = document.createElement('script');
@@ -37,7 +37,7 @@
         document.head.appendChild(s);
       }
       for (var i = 0; i < scripts.length; i++) {
-        add_script(scripts[i], arrow_support ? '' : 'text/babel');
+        add_script(scripts[i], es6_support ? '' : 'text/babel');
       }
     </script>
   </head>
