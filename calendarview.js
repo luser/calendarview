@@ -12,6 +12,10 @@ function log(...args) {
   }
 }
 
+function handle_err(err) {
+  console.error('Error: ' + err.toString());
+}
+
 var calendars = [];
 $(document).ready(function() {
   $('#calendar').fullCalendar({
@@ -31,7 +35,7 @@ $(document).ready(function() {
     defaultView: 'schedule',
     timezone: 'local'
   });
-  $('#add-google-calendars').on('click', () => google_auth(CLIENT_ID).then(gcal_list_calendars).then(add_gcal_list));
+  $('#add-google-calendars').on('click', () => google_auth(CLIENT_ID).then(gcal_list_calendars).then(add_gcal_list).catch(handle_err));
   $('#add-ical').on('click', () => add_ical_calendar());
   window.onresize = () => $('#calendar').fullCalendar('option', 'height', window.innerHeight);
   localforage.getItem('calendars')
@@ -39,6 +43,7 @@ $(document).ready(function() {
       if (data != null) {
         log('Found %d saved calendars', data.length);
         calendars = data;
+        update_calendars();
         var google_calendars = [];
         for (var calendar of data) {
           if (calendar.type == 'ical') {
@@ -48,10 +53,10 @@ $(document).ready(function() {
           }
         }
         if (google_calendars.length) {
-          google_auth(CLIENT_ID).then(() => google_calendars.forEach(id => add_google_source(id)));
+          google_auth(CLIENT_ID).then(() => google_calendars.forEach(id => add_google_source(id))).catch(handle_err);
         }
       }
-    });
+    }).catch(handle_err);
 
   // Refresh calendar sources every 5 minutes.
   setInterval(() => $('#calendar').fullCalendar('refetchEvents'), 5 * 60 * 1000);
@@ -99,6 +104,34 @@ function show_settings() {
   $('#settings').toggle();
 }
 
+function update_calendars() {
+  function remover(i) {
+    return () => remove_calendar(i);
+  }
+  $('#calendars-list').empty();
+  for (var i = 0; i < calendars.length; i++) {
+    var del = $('<button title="Remove">&#x1f5d1;</button>');
+    del.on('click', remover(i));
+    $('#calendars-list').append($('<li>').append(del, $('<span>').text(calendars[i].name)));
+  }
+}
+
+function set_calendars() {
+  localforage.setItem('calendars', calendars);
+  update_calendars();
+}
+
+function remove_calendar(index) {
+  log('remove_calendar(%d)', index);
+  var cal = calendars.splice(index, 1)[0];
+  if (cal.type == 'ical') {
+    $('#calendar').fullCalendar('removeEventSource', cal.url);
+  } else if (cal.type == 'google') {
+    $('#calendar').fullCalendar('removeEventSource', cal.id);
+  }
+  set_calendars();
+}
+
 function add_gcal_list(gcals) {
   log('add_gcal_list: %d calendars', gcals.length);
   var existing_gcals = {};
@@ -118,7 +151,7 @@ function add_gcal_list(gcals) {
     add_google_source(cal.id);
     calendars.push({type: 'google', id: cal.id, name: cal.summary});
   }
-  localforage.setItem('calendars', calendars);
+  set_calendars();
 }
 
 function add_ical_calendar() {
@@ -134,12 +167,12 @@ function add_calendar(type, which) {
   if (type == 'ical') {
     add_ical_source(which);
     calendars.push({type: type, url: which});
-    localforage.setItem('calendars', calendars);
+    set_calendars();
   } else if (type == 'google') {
     google_auth(CLIENT_ID).then(() => {
       add_google_source(which);
       calendars.push({type: type, id: which});
-      localforage.setItem('calendars', calendars);
+      set_calendars();
     });
   } else {
     console.error('Only ical and Google calendars are supported currently');
